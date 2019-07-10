@@ -11,7 +11,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
 class SettingType extends AbstractType {
@@ -29,10 +29,10 @@ class SettingType extends AbstractType {
 	 * {@inheritDoc}
 	 */
 	public function buildForm(FormBuilderInterface $builder, array $options) {
-		$builder->add('value', null, array(
+		$builder->add('value', null, [
 			'required' => false,
 			'translation_domain' => 'CraueConfigBundle',
-		));
+		]);
 	}
 
 	/**
@@ -49,16 +49,9 @@ class SettingType extends AbstractType {
 	 * {@inheritDoc}
 	 */
 	public function configureOptions(OptionsResolver $resolver) {
-		$resolver->setDefaults(array(
+		$resolver->setDefaults([
 			'data_class' => $this->entityName,
-		));
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function getName() {
-		return $this->getBlockPrefix();
+		]);
 	}
 
 	/**

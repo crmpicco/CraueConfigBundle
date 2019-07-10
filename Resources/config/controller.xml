@@ -9,9 +9,11 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 	<services>
-		<service id="craue_config.form_type.setting" class="Craue\ConfigBundle\Form\Type\SettingType">
-			<tag name="form.type" />
-			<argument>%craue_config.entity_name%</argument>
+		<service id="Craue\ConfigBundle\Controller\SettingsController" class="Craue\ConfigBundle\Controller\SettingsController">
+			<call method="setContainer">
+				<argument type="service" id="service_container" />
+			</call>
+			<tag name="controller.service_arguments"/>
 		</service>
 	</services>
 </container>

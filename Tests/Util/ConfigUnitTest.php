@@ -8,13 +8,15 @@ use Craue\ConfigBundle\Repository\SettingRepository;
 use Craue\ConfigBundle\Util\Config;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub\ReturnValueMap;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group unit
  *
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
 class ConfigUnitTest extends TestCase {
@@ -23,9 +25,9 @@ class ConfigUnitTest extends TestCase {
 		$config = new Config();
 		$setting = Setting::create('name', 'value');
 
-		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(array('findOneBy' => $this->returnValueMap(array(
-			array(array('name' => $setting->getName()), null, $setting),
-		))))));
+		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(['findOneBy' => $this->returnValueMap([
+			[['name' => $setting->getName()], null, $setting],
+		])])));
 
 		$this->assertEquals($setting->getValue(), $config->get($setting->getName()));
 	}
@@ -45,9 +47,9 @@ class ConfigUnitTest extends TestCase {
 		$config = new Config();
 		$setting = Setting::create('name', 'value');
 
-		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(array('findOneBy' => $this->returnValueMap(array(
-			array(array('name' => $setting->getName()), null, $setting),
-		))))));
+		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(['findOneBy' => $this->returnValueMap([
+			[['name' => $setting->getName()], null, $setting],
+		])])));
 
 		$cache = $this->createCacheMock();
 		$config->setCache($cache);
@@ -74,15 +76,15 @@ class ConfigUnitTest extends TestCase {
 
 		$cache->expects($this->once())
 			->method('has')
-			->will($this->returnValueMap(array(
-				array('name', true),
-			)))
+			->will($this->returnValueMap([
+				['name', true],
+			]))
 		;
 		$cache->expects($this->once())
 			->method('get')
-			->will($this->returnValueMap(array(
-				array('name', 'value'),
-			)))
+			->will($this->returnValueMap([
+				['name', 'value'],
+			]))
 		;
 		$cache->expects($this->never())
 			->method('set')
@@ -96,10 +98,10 @@ class ConfigUnitTest extends TestCase {
 		$cache = $this->createCacheMock();
 		$config->setCache($cache);
 
-		$setting = $this->getMockBuilder('Craue\ConfigBundle\Entity\Setting')->getMock();
+		$setting = $this->createMock(Setting::class);
 		$newValue = 'new-value';
 
-		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(array('findOneBy' => $setting))));
+		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(['findOneBy' => $setting])));
 
 		$cache->expects($this->once())
 			->method('set')
@@ -130,15 +132,15 @@ class ConfigUnitTest extends TestCase {
 		$cache = $this->createCacheMock();
 		$config->setCache($cache);
 
-		$setting = $this->getMockBuilder('Craue\ConfigBundle\Entity\Setting')->setMethods(array('setValue'))->getMock();
+		$setting = $this->getMockBuilder(Setting::class)->setMethods(['setValue'])->getMock();
 		$setting->setName('name');
 		$newValue = 'new-value';
 
-		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(array('findByNames' => array($setting->getName() => $setting)))));
+		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(['findByNames' => [$setting->getName() => $setting]])));
 
-		$settingsKeyValuePairs = array(
+		$settingsKeyValuePairs = [
 			$setting->getName() => $newValue,
-		);
+		];
 
 		$cache->expects($this->once())
 			->method('setMultiple')
@@ -155,13 +157,13 @@ class ConfigUnitTest extends TestCase {
 
 	public function testSetMultiple_noChanges() {
 		$config = new Config();
-		$setting = $this->getMockBuilder('Craue\ConfigBundle\Entity\Setting')->getMock();
+		$setting = $this->createMock(Setting::class);
 
 		$setting->expects($this->never())
 			->method('setValue')
 		;
 
-		$config->setMultiple(array());
+		$config->setMultiple([]);
 	}
 
 	/**
@@ -172,19 +174,19 @@ class ConfigUnitTest extends TestCase {
 		$config = new Config();
 		$setting = Setting::create('name1');
 
-		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(array('findByNames' => array($setting->getName() => $setting)))));
+		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(['findByNames' => [$setting->getName() => $setting]])));
 
-		$config->setMultiple(array(
+		$config->setMultiple([
 			$setting->getName() => 'new-value1',
 			'oh-no' => 'new-value2',
-		));
+		]);
 	}
 
 	public function testAll_noSettings() {
 		$config = new Config();
-		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(array('findAll' => array()))));
+		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(['findAll' => []])));
 
-		$this->assertEquals(array(), $config->all());
+		$this->assertEquals([], $config->all());
 	}
 
 	/**
@@ -198,12 +200,12 @@ class ConfigUnitTest extends TestCase {
 		$setting1 = Setting::create('name1', 'value1');
 		$setting2 = Setting::create('name2', 'value2');
 
-		$settingsKeyValuePairs = array(
+		$settingsKeyValuePairs = [
 			$setting1->getName() => $setting1->getValue(),
 			$setting2->getName() => $setting2->getValue(),
-		);
+		];
 
-		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(array('findAll' => array($setting1, $setting2)))));
+		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(['findAll' => [$setting1, $setting2]])));
 
 		$cache->expects($this->once())
 			->method('setMultiple')
@@ -221,9 +223,9 @@ class ConfigUnitTest extends TestCase {
 		$cache = $this->createCacheMock();
 		$config->setCache($cache);
 
-		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(array('findBy' => $this->returnValueMap(array(
-			array(array('section' => $section), null, null, null, $foundSettings),
-		))))));
+		$config->setEntityManager($this->createEntityManagerMock($this->createEntityRepositoryMock(['findBy' => $this->returnValueMap([
+			[['section' => $section], null, null, null, $foundSettings],
+		])])));
 
 		$cache->expects($this->once())
 			->method('setMultiple')
@@ -234,11 +236,31 @@ class ConfigUnitTest extends TestCase {
 	}
 
 	public function dataGetBySection() {
-		return array(
-			array('section',		array(Setting::create('name', 'value', 'section')),	array('name' => 'value')),
-			array(null,				array(Setting::create('name', 'value')),			array('name' => 'value')),
-			array('other-section',	array(),											array()),
-		);
+		return [
+			['section',			[Setting::create('name', 'value', 'section')],	['name' => 'value']],
+			[null,				[Setting::create('name', 'value')],				['name' => 'value']],
+			['other-section',	[],												[]],
+		];
+	}
+
+	/**
+	 * Ensure that the configured repository is returned.
+	 * @expectedException \RuntimeException
+	 * @expectedExceptionMessageRegExp /^Entity repository of type "Craue\\ConfigBundle\\Repository\\SettingRepository" expected, but got ".+"\.$/
+	 */
+	public function testGetRepo_configuredRepository() {
+		$config = new Config();
+		$method = new \ReflectionMethod($config, 'getRepo');
+		$method->setAccessible(true);
+
+		$repo = $this->getMockBuilder(EntityRepository::class)
+			->disableOriginalConstructor()
+			->getMock()
+		;
+
+		$config->setEntityManager($this->createEntityManagerMock($repo));
+
+		$method->invoke($config);
 	}
 
 	/**
@@ -282,14 +304,14 @@ class ConfigUnitTest extends TestCase {
 		$config->setEntityManager($em);
 
 		// 1st call to `getRepo` using the default entity name
-		$config->setEntityName('Craue\ConfigBundle\Entity\Setting');
+		$config->setEntityName(Setting::class);
 
 		// invoke twice to ensure the cached instance is used
 		$method->invoke($config);
 		$method->invoke($config);
 
 		// 2nd call to `getRepo` using a different entity name
-		$config->setEntityName('Craue\ConfigBundle\Entity\DoesNotExist');
+		$config->setEntityName(Setting::class . 'DoesNotExist');
 
 		// invoke twice to ensure the cached instance is used
 		$method->invoke($config);
@@ -341,35 +363,34 @@ class ConfigUnitTest extends TestCase {
 
 	/**
 	 * @param array $methodsWithReturnValues Method call expectations (method name => return value).
-	 * @return PHPUnit_Framework_MockObject_MockObject|SettingRepository
+	 * @return MockObject|SettingRepository
 	 */
-	protected function createEntityRepositoryMock(array $methodsWithReturnValues = array()) {
-		$repo = $this->getMockBuilder('Craue\ConfigBundle\Repository\SettingRepository')
+	protected function createEntityRepositoryMock(array $methodsWithReturnValues = []) {
+		$repo = $this->getMockBuilder(SettingRepository::class)
 			->disableOriginalConstructor()
 			->getMock()
 		;
 
 		foreach ($methodsWithReturnValues as $method => $returnValue) {
-			if (!($returnValue instanceof \PHPUnit_Framework_MockObject_Stub_Return)
-					&& !($returnValue instanceof \PHPUnit_Framework_MockObject_Stub_ReturnValueMap)) {
-						$returnValue = $this->returnValue($returnValue);
-					}
+			if (!$returnValue instanceof ReturnValueMap) {
+				$returnValue = $this->returnValue($returnValue);
+			}
 
-					$repo->expects($this->once())
-						->method($method)
-						->will($returnValue)
-					;
+			$repo->expects($this->once())
+				->method($method)
+				->will($returnValue)
+			;
 		}
 
 		return $repo;
 	}
 
 	/**
-	 * @param PHPUnit_Framework_MockObject_MockObject|EntityRepository|null $repo
-	 * @return PHPUnit_Framework_MockObject_MockObject|EntityManager
+	 * @param EntityRepository|null $repo
+	 * @return MockObject|EntityManager
 	 */
 	protected function createEntityManagerMock(EntityRepository $repo = null) {
-		$em = $this->getMockBuilder('\Doctrine\ORM\EntityManager')
+		$em = $this->getMockBuilder(EntityManager::class)
 			->disableOriginalConstructor()
 			->getMock()
 		;
@@ -385,10 +406,10 @@ class ConfigUnitTest extends TestCase {
 	}
 
 	/**
-	 * @return PHPUnit_Framework_MockObject_MockObject|CacheAdapterInterface
+	 * @return MockObject|CacheAdapterInterface
 	 */
 	protected function createCacheMock() {
-		return $this->getMockBuilder('\Craue\ConfigBundle\CacheAdapter\CacheAdapterInterface')->getMock();
+		return $this->createMock(CacheAdapterInterface::class);
 	}
 
 }

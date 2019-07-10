@@ -10,7 +10,7 @@ use Symfony\Component\Yaml\Yaml;
  * @group unit
  *
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
 class TranslationsTest extends TestCase {
@@ -25,6 +25,7 @@ class TranslationsTest extends TestCase {
 	 * @dataProvider dataYamlTranslationFileIsValid
 	 */
 	public function testYamlTranslationFileIsValid($filePath) {
+		// TODO replace by `$this->assertIsArray(Yaml::parse(file_get_contents($filePath)));` as soon as PHPUnit >= 7.5 is required
 		$this->assertInternalType('array', Yaml::parse(file_get_contents($filePath)));
 	}
 
@@ -43,7 +44,7 @@ class TranslationsTest extends TestCase {
 	 */
 	public function testYamlTranslationFilesContainNoUnknownKeys() {
 		$loader = new YamlFileLoader();
-		$translations = array();
+		$translations = [];
 
 		foreach ($this->getTranslationFilePaths() as $filePath) {
 			list($domain, $locale) = explode('.', basename($filePath));
@@ -57,7 +58,7 @@ class TranslationsTest extends TestCase {
 					continue;
 				}
 
-				$this->assertEquals(array(), array_diff($keys, $translations[$domain][static::$defaultLocale]),
+				$this->assertEquals([], array_diff($keys, $translations[$domain][static::$defaultLocale]),
 						sprintf('The translation file for locale "%s" (domain "%s") contains message keys not available for locale "%s".', $locale, $domain, static::$defaultLocale));
 			}
 		}

@@ -14,7 +14,7 @@ by an admin user.
 Let Composer download and install the bundle by running
 
 ```sh
-php composer.phar require craue/config-bundle:~2.0
+composer require craue/config-bundle
 ```
 
 in a shell.
@@ -24,10 +24,10 @@ in a shell.
 ```php
 // in app/AppKernel.php
 public function registerBundles() {
-	$bundles = array(
+	$bundles = [
 		// ...
 		new Craue\ConfigBundle\CraueConfigBundle(),
-	);
+	];
 	// ...
 }
 ```
@@ -37,16 +37,16 @@ public function registerBundles() {
 Preferably you do this by calling
 
 ```sh
-# in a shell (run `bin/console` instead of `app/console` if your project is based on Symfony 3)
-php app/console doctrine:migrations:diff
-php app/console doctrine:migrations:migrate
+# in a shell
+php bin/console doctrine:migrations:diff
+php bin/console doctrine:migrations:migrate
 ```
 
 or
 
 ```sh
-# in a shell (run `bin/console` instead of `app/console` if your project is based on Symfony 3)
-php app/console doctrine:schema:update
+# in a shell
+php bin/console doctrine:schema:update
 ```
 
 or however you like.
@@ -69,7 +69,14 @@ craue_config_settings:
 craue_config_settings_modify:
   path: /settings/modify
   defaults:
-    _controller: CraueConfigBundle:Settings:modify
+    _controller: Craue\ConfigBundle\Controller\SettingsController::modifyAction
+```
+
+Some CSS is needed to render the form correctly. Install the assets in your project:
+
+```sh
+# in a shell
+php bin/console assets:install --symlink web
 ```
 
 # Usage
@@ -115,7 +122,7 @@ With the same service you can set new values of settings:
 
 ```php
 $this->get('craue_config')->set('name-of-a-setting', 'new value');
-$this->get('craue_config')->setMultiple(array('setting-1' => 'foo', 'setting-2' => 'bar'));
+$this->get('craue_config')->setMultiple(['setting-1' => 'foo', 'setting-2' => 'bar']);
 ```
 
 Keep in mind that the setting has to be present, or an exception will be thrown.
@@ -141,8 +148,8 @@ done, `CraueConfigBundle` will automatically cache settings (using the built-in 
 Keep in mind to clear the cache (if needed) after modifying settings outside of your app (e.g. by Doctrine migrations):
 
 ```sh
-# in a shell (run `bin/console` instead of `app/console` if your project is based on Symfony 3)
-php app/console doctrine:cache:clear craue_config_cache
+# in a shell
+php bin/console doctrine:cache:clear craue_config_cache
 ```
 
 ## Cache implementation: DoctrineCacheBundle

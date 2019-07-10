@@ -9,7 +9,7 @@ use Doctrine\Common\Cache\ArrayCache;
  * @group unit
  *
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
 class DoctrineCacheBundleAdapterTest extends BaseCacheAdapterTest {
@@ -22,11 +22,11 @@ class DoctrineCacheBundleAdapterTest extends BaseCacheAdapterTest {
 	 * TODO remove as soon as doctrine/cache >= 1.6 is required
 	 */
 	public function testSetMultiple_fails() {
-		if (method_exists('\Doctrine\Common\Cache\ArrayCache', 'saveMultiple')) {
+		if (method_exists(ArrayCache::class, 'saveMultiple')) {
 			$this->markTestSkipped('DoctrineCacheBundle already supports `saveMultiple`.');
 		}
 
-		$providerMock = $this->getMockBuilder('\Doctrine\Common\Cache\ArrayCache')->getMock();
+		$providerMock = $this->createMock(ArrayCache::class);
 
 		$providerMock->expects($this->once())
 			->method('save')
@@ -35,7 +35,7 @@ class DoctrineCacheBundleAdapterTest extends BaseCacheAdapterTest {
 
 		$adapter = new DoctrineCacheBundleAdapter($providerMock);
 
-		$this->assertFalse($adapter->setMultiple(array('key' => 'value')));
+		$this->assertFalse($adapter->setMultiple(['key' => 'value']));
 	}
 
 }

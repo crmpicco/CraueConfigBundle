@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
  * @group unit
  *
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
 abstract class BaseCacheAdapterTest extends TestCase {
@@ -33,7 +33,7 @@ abstract class BaseCacheAdapterTest extends TestCase {
 		$this->assertTrue($adapter->clear());
 		$this->assertFalse($adapter->has('key'));
 
-		$this->assertTrue($adapter->setMultiple(array('key1' => 'value1', 'key2' => 'value2')));
+		$this->assertTrue($adapter->setMultiple(['key1' => 'value1', 'key2' => 'value2']));
 		$this->assertTrue($adapter->has('key1'));
 		$this->assertTrue($adapter->has('key2'));
 		$this->assertSame('value1', $adapter->get('key1'));

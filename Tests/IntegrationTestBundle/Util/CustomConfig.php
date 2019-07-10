@@ -7,7 +7,7 @@ use Craue\ConfigBundle\Util\Config;
 
 /**
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
 class CustomConfig extends Config {
@@ -18,9 +18,9 @@ class CustomConfig extends Config {
 	 * @throws \RuntimeException If the setting is not defined.
 	 */
 	public function getRawSetting($name) {
-		$setting = $this->getRepo()->findOneBy(array(
+		$setting = $this->getRepo()->findOneBy([
 			'name' => $name,
-		));
+		]);
 
 		if ($setting === null) {
 			throw $this->createNotFoundException($name);

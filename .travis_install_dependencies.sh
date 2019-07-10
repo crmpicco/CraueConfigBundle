@@ -14,7 +14,7 @@ case "${DEPS:-}" in
 		;;
 	*)
 		if [ -n "${MIN_STABILITY:-}" ]; then
-			sed -i -e "s/\"minimum-stability\": \"stable\"/\"minimum-stability\": \"${MIN_STABILITY}\"/" composer.json
+			composer config minimum-stability "${MIN_STABILITY}"
 		fi
 
 		composer remove --no-update symfony/framework-bundle
@@ -23,5 +23,9 @@ case "${DEPS:-}" in
 			composer require --no-update --dev symfony/symfony:"${SYMFONY_VERSION}"
 		fi
 esac
+
+if [ -n "${WITH_STATIC_ANALYSIS:-}" ]; then
+	composer require --no-update --dev phpstan/phpstan-shim
+fi
 
 composer update ${COMPOSER_UPDATE_ARGS:-}

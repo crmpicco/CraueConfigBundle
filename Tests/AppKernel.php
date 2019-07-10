@@ -3,7 +3,6 @@
 namespace Craue\ConfigBundle\Tests;
 
 use Symfony\Component\Config\Loader\LoaderInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\Kernel;
 
@@ -18,7 +17,7 @@ class AppKernel extends Kernel {
 			$configFiles = (array) $configFiles;
 		}
 
-		$this->configFiles = array();
+		$this->configFiles = [];
 
 		foreach ($configFiles as $configFile) {
 			$fs = new Filesystem();
@@ -35,15 +34,14 @@ class AppKernel extends Kernel {
 	}
 
 	public function registerBundles() {
-		return array(
+		return [
 			new \Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
 			new \Doctrine\Bundle\DoctrineCacheBundle\DoctrineCacheBundle(),
-			new \Symfony\Bundle\AsseticBundle\AsseticBundle(),
 			new \Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
 			new \Symfony\Bundle\TwigBundle\TwigBundle(),
 			new \Craue\ConfigBundle\CraueConfigBundle(),
 			new \Craue\ConfigBundle\Tests\IntegrationTestBundle\IntegrationTestBundle(),
-		);
+		];
 	}
 
 	public function registerContainerConfiguration(LoaderInterface $loader) {
@@ -53,15 +51,6 @@ class AppKernel extends Kernel {
 
 		foreach ($this->configFiles as $configFile) {
 			$loader->load($configFile);
-		}
-
-		if (class_exists('Symfony\Component\Asset\Package')) {
-			// enable assets to avoid fatal error "Call to a member function needsEnvironment() on a non-object in vendor/twig/twig/lib/Twig/Node/Expression/Function.php on line 25" with Symfony 3.0
-			$loader->load(function(ContainerBuilder $container) {
-				$container->loadFromExtension('framework', array(
-					'assets' => null,
-				));
-			});
 		}
 	}
 
@@ -82,7 +71,7 @@ class AppKernel extends Kernel {
 	}
 
 	public function serialize() {
-		return serialize(array($this->environment, $this->configFiles));
+		return serialize([$this->environment, $this->configFiles]);
 	}
 
 	public function unserialize($data) {

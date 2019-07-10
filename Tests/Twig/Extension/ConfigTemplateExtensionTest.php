@@ -3,20 +3,21 @@
 namespace Craue\ConfigBundle\Tests\Twig\Extension;
 
 use Craue\ConfigBundle\Twig\Extension\ConfigTemplateExtension;
+use Craue\ConfigBundle\Util\Config;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group unit
  *
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
 class ConfigTemplateExtensionTest extends TestCase {
 
 	public function testGetSetting() {
 		$ext = new ConfigTemplateExtension();
-		$config = $this->getMockBuilder('Craue\ConfigBundle\Util\Config')->getMock();
+		$config = $this->createMock(Config::class);
 
 		$config->expects($this->once())
 			->method('get')
@@ -30,9 +31,9 @@ class ConfigTemplateExtensionTest extends TestCase {
 
 	public function testSortSections() {
 		$ext = new ConfigTemplateExtension();
-		$ext->setSectionOrder(array('section1', 'section2'));
+		$ext->setSectionOrder(['section1', 'section2']);
 
-		$this->assertEquals(array(null, 'section1', 'section2'), $ext->sortSections(array('section2', null, 'section1')));
+		$this->assertEquals([null, 'section1', 'section2'], $ext->sortSections(['section2', null, 'section1']));
 	}
 
 	/**
@@ -41,7 +42,7 @@ class ConfigTemplateExtensionTest extends TestCase {
 	public function testSortSections_sectionOrderNotSet() {
 		$ext = new ConfigTemplateExtension();
 
-		$this->assertEquals(array(null, 'section2', 'section1'), $ext->sortSections(array('section2', null, 'section1')));
+		$this->assertEquals([null, 'section2', 'section1'], $ext->sortSections(['section2', null, 'section1']));
 	}
 
 }

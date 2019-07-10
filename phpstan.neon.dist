@@ -1,0 +1,2 @@
+includes:
+	- %currentWorkingDirectory%/phpstan-config.neon

@@ -3,18 +3,21 @@
 namespace Craue\ConfigBundle\Twig\Extension;
 
 use Craue\ConfigBundle\Util\Config;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
+use Twig\TwigFunction;
 
 /**
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
-class ConfigTemplateExtension extends \Twig_Extension {
+class ConfigTemplateExtension extends AbstractExtension {
 
 	/**
 	 * @var string[]
 	 */
-	protected $sectionOrder = array();
+	protected $sectionOrder = [];
 
 	/**
 	 * @var Config
@@ -24,7 +27,7 @@ class ConfigTemplateExtension extends \Twig_Extension {
 	/**
 	 * @param string[] $sectionOrder The order in which sections will be rendered.
 	 */
-	public function setSectionOrder(array $sectionOrder = array()) {
+	public function setSectionOrder(array $sectionOrder = []) {
 		$this->sectionOrder = $sectionOrder;
 	}
 
@@ -46,18 +49,18 @@ class ConfigTemplateExtension extends \Twig_Extension {
 	 * {@inheritDoc}
 	 */
 	public function getFilters() {
-		return array(
-			new \Twig_SimpleFilter('craue_sortSections', array($this, 'sortSections')),
-		);
+		return [
+			new TwigFilter('craue_sortSections', [$this, 'sortSections']),
+		];
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public function getFunctions() {
-		return array(
-			new \Twig_SimpleFunction('craue_setting', array($this, 'getSetting')),
-		);
+		return [
+			new TwigFunction('craue_setting', [$this, 'getSetting']),
+		];
 	}
 
 	/**
@@ -65,7 +68,7 @@ class ConfigTemplateExtension extends \Twig_Extension {
 	 * @return string[]
 	 */
 	public function sortSections(array $sections) {
-		$finalSectionOrder = array();
+		$finalSectionOrder = [];
 
 		// add null section first (if it exists)
 		$nullIndex = array_search(null, $sections);

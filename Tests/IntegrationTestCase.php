@@ -4,34 +4,40 @@ namespace Craue\ConfigBundle\Tests;
 
 use Craue\ConfigBundle\Entity\SettingInterface;
 use Craue\ConfigBundle\Repository\SettingRepository;
-use Craue\ConfigBundle\Twig\Extension\ConfigTemplateExtension;
 use Craue\ConfigBundle\Util\Config;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Client;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Twig\Environment;
 
 /**
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
 abstract class IntegrationTestCase extends WebTestCase {
+
+	/**
+	 * @var Client|KernelBrowser|null
+	 */
+	protected static $client;
 
 	const PLATFORM_MYSQL = 'mysql';
 	const PLATFORM_SQLITE = 'sqlite';
 
 	public static function getValidPlatformsWithRequiredExtensions() {
-		return array(
+		return [
 			self::PLATFORM_MYSQL => 'pdo_mysql',
 			self::PLATFORM_SQLITE => 'pdo_sqlite',
-		);
+		];
 	}
 
 	/**
 	 * @var bool[]
 	 */
-	private static $databaseInitialized = array();
+	private static $databaseInitialized = [];
 
 	/**
 	 * @param string $testName The name of the test, set by PHPUnit when called directly as a {@code dataProvider}.
@@ -39,10 +45,10 @@ abstract class IntegrationTestCase extends WebTestCase {
 	 * @return string[]
 	 */
 	public static function getPlatformConfigs($testName, $baseConfig = 'config.yml') {
-		$testData = array();
+		$testData = [];
 
 		foreach (self::getValidPlatformsWithRequiredExtensions() as $platform => $extension) {
-			$testData[] = array($platform, array($baseConfig, sprintf('config_flavor_%s.yml', $platform)), $extension);
+			$testData[] = [$platform, [$baseConfig, sprintf('config_flavor_%s.yml', $platform)], $extension];
 		}
 
 		return $testData;
@@ -53,7 +59,7 @@ abstract class IntegrationTestCase extends WebTestCase {
 	 * @return array
 	 */
 	public static function duplicateTestDataForEachPlatform(array $allTestData, $baseConfig = 'config.yml') {
-		$testData = array();
+		$testData = [];
 
 		foreach ($allTestData as $oneTestData) {
 			foreach (self::getPlatformConfigs('', $baseConfig) as $envConf) {
@@ -67,9 +73,9 @@ abstract class IntegrationTestCase extends WebTestCase {
 	/**
 	 * {@inheritDoc}
 	 */
-	protected static function createKernel(array $options = array()) {
-		$environment = isset($options['environment']) ? $options['environment'] : 'test';
-		$configFile = isset($options['config']) ? $options['config'] : 'config.yml';
+	protected static function createKernel(array $options = []) {
+		$environment = $options['environment'] ?? 'test';
+		$configFile = $options['config'] ?? 'config.yml';
 
 		return new AppKernel($environment, $configFile);
 	}
@@ -78,15 +84,13 @@ abstract class IntegrationTestCase extends WebTestCase {
 	 * Initializes a client and prepares the database.
 	 * @param string|null $requiredExtension Required PHP extension.
 	 * @param array $options Options for creating the client.
-	 * @return Client
 	 */
-	protected function initClient($requiredExtension, array $options = array()) {
-		if ($requiredExtension !== null && !in_array($requiredExtension, get_loaded_extensions(), true)) {
-			// !extension_loaded($requiredExtension) doesn't seem to work with HHVM as it returns false even though the extension is loaded
+	protected function initClient($requiredExtension, array $options = []) {
+		if ($requiredExtension !== null && !extension_loaded($requiredExtension)) {
 			$this->markTestSkipped(sprintf('Extension "%s" is not loaded.', $requiredExtension));
 		}
 
-		$client = static::createClient($options);
+		static::$client = static::createClient($options);
 		$environment = static::$kernel->getEnvironment();
 
 		// Avoid completely rebuilding the database for each test. Create it only once per environment. After that, cleaning it is enough.
@@ -96,8 +100,6 @@ abstract class IntegrationTestCase extends WebTestCase {
 		} else {
 			$this->removeAllSettings();
 		}
-
-		return $client;
 	}
 
 	protected function rebuildDatabase() {
@@ -110,7 +112,7 @@ abstract class IntegrationTestCase extends WebTestCase {
 	}
 
 	/**
-	 * @param $setting SettingInterface The setting to persist.
+	 * @param SettingInterface $setting The setting to persist.
 	 * @return SettingInterface The persisted setting.
 	 */
 	protected function persistSetting(SettingInterface $setting) {
@@ -142,13 +144,6 @@ abstract class IntegrationTestCase extends WebTestCase {
 	}
 
 	/**
-	 * @return ConfigTemplateExtension
-	 */
-	protected function getConfigTemplateExtension() {
-		return $this->getService('twig.extension.craue_config_template');
-	}
-
-	/**
 	 * @return EntityManager
 	 */
 	protected function getEntityManager() {
@@ -163,7 +158,7 @@ abstract class IntegrationTestCase extends WebTestCase {
 	}
 
 	/**
-	 * @return \Twig_Environment
+	 * @return Environment
 	 */
 	protected function getTwig() {
 		return $this->getService('twig');
@@ -178,23 +173,21 @@ abstract class IntegrationTestCase extends WebTestCase {
 	}
 
 	/**
-	 * @param Client $client
 	 * @param string $route
 	 * @param array $parameters
 	 * @return string URL
 	 */
-	protected function url(Client $client, $route, array $parameters = array()) {
-		return $client->getContainer()->get('router')->generate($route, $parameters);
+	protected function url($route, array $parameters = []) {
+		return $this->getService('router')->generate($route, $parameters);
 	}
 
 	/**
-	 * @param Client $client
 	 * @param string $expectedTargetUrl
 	 */
-	protected function assertRedirect(Client $client, $expectedTargetUrl) {
-		// don't just check with $client->getResponse()->isRedirect() to know the actual URL on failure
-		$this->assertEquals(302, $client->getResponse()->getStatusCode());
-		$this->assertContains($expectedTargetUrl, $client->getResponse()->headers->get('Location'));
+	protected function assertRedirect($expectedTargetUrl) {
+		// don't just check with static::$client->getResponse()->isRedirect() to know the actual URL on failure
+		$this->assertEquals(302, static::$client->getResponse()->getStatusCode());
+		$this->assertContains($expectedTargetUrl, static::$client->getResponse()->headers->get('Location'));
 	}
 
 }

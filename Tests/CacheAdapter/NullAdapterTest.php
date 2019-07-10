@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
  * @group unit
  *
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
 class NullAdapterTest extends TestCase {
@@ -39,7 +39,7 @@ class NullAdapterTest extends TestCase {
 	}
 
 	public function testSetMultiple() {
-		$this->assertFalse($this->getAdapter()->setMultiple(array()));
+		$this->assertFalse($this->getAdapter()->setMultiple([]));
 	}
 
 }

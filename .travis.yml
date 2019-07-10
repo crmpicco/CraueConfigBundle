@@ -1,44 +1,49 @@
 language: php
 
 php:
-  - 5.3
-  - 5.4
-  - 5.5
-  - 5.6
   - 7.0
   - 7.1
+  - 7.2
+  - 7.3
 
 env:
-  - SYMFONY_VERSION='2.7.*'
+  - SYMFONY_VERSION='3.4.*'
 
-matrix:
+stages:
+  - smoke test 🕵️
+  - test
+
+jobs:
   include:
-    - php: hhvm
-      dist: trusty
-    - php: 5.3
-      env: DEPS='lowest' SYMFONY_DEPRECATIONS_HELPER='666'
-    - php: 5.6
-      env: DEPS='unmodified'
-    - php: 5.6
-      env: SYMFONY_VERSION='2.8.*'
-    - php: 5.6
-      env: SYMFONY_VERSION='3.1.*'
-    - php: 5.6
-      env: SYMFONY_VERSION='3.2.*'
-    - php: 5.6
-      env: SYMFONY_VERSION='3.3.*'
-    - php: 5.6
-      env: SYMFONY_VERSION='3.4.*' MIN_STABILITY='dev'
+    - stage: smoke test 🕵️
+      php: 7.0
+      env: DEPS='lowest' SYMFONY_DEPRECATIONS_HELPER='832'
+    -
+      php: 7.3
+      env: DEPS='unmodified' WITH_STATIC_ANALYSIS='yes'
+
+    - stage: test
+      php: 7.3
+      env: SYMFONY_VERSION='4.1.*'
+    -
+      php: 7.3
+      env: SYMFONY_VERSION='4.2.*'
+    -
+      php: 7.3
+      env: SYMFONY_VERSION='4.3.*'
+    -
+      php: 7.3
+      env: SYMFONY_VERSION='4.4.*' MIN_STABILITY='dev'
   allow_failures:
-    - env: SYMFONY_VERSION='3.4.*' MIN_STABILITY='dev'
+    - env: SYMFONY_VERSION='4.4.*' MIN_STABILITY='dev'
   fast_finish: true
 
 install:
   # set unlimited memory_limit
-  - if [ "${TRAVIS_PHP_VERSION}" != 'hhvm' ]; then INI_FILE=~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini; else INI_FILE=/etc/hhvm/php.ini; fi;
+  - INI_FILE=~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
   - echo "memory_limit = -1" >> "${INI_FILE}"
   # disable Xdebug for better Composer performance
-  - if [ "${TRAVIS_PHP_VERSION}" != 'hhvm' ]; then mv ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini xdebug.ini; fi;
+  - if php -v | grep -q 'Xdebug'; then phpenv config-rm xdebug.ini; fi;
   # install dependencies using Composer
   - bash .travis_install_dependencies.sh
   # show installed dependencies
@@ -54,20 +59,19 @@ before_script:
   - mkdir -p build/logs
 
 script:
-  # enable Xdebug for code coverage analysis
-  - if [ "${TRAVIS_PHP_VERSION}" != 'hhvm' ]; then mv xdebug.ini ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini; fi;
+  # validate composer.json
+  - if [ -n "${WITH_STATIC_ANALYSIS:-}" ]; then composer validate --strict --no-check-lock; fi;
+  # run PHPStan
+  - if [ -n "${WITH_STATIC_ANALYSIS:-}" ]; then vendor/bin/phpstan analyse; fi;
   # run PHPUnit
-  - vendor/bin/phpunit -v --coverage-clover build/logs/clover.xml
+  - phpdbg -qrr vendor/phpunit/phpunit/phpunit -v --coverage-clover build/logs/clover.xml
   # upload code coverage data
-  - if [ "${TRAVIS_PHP_VERSION}" != 'hhvm' ]; then travis_retry wget -q https://github.com/satooshi/php-coveralls/releases/download/v1.0.1/coveralls.phar && travis_retry php coveralls.phar -v; fi;
+  - travis_retry wget -q https://github.com/php-coveralls/php-coveralls/releases/download/v2.1.0/php-coveralls.phar && travis_retry php php-coveralls.phar -v
 
 notifications:
   email:
     on_success: always
     on_failure: always
-
-# use container-based infrastructure
-sudo: false
 
 # cache Composer's package cache
 cache:

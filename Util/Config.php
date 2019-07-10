@@ -10,7 +10,7 @@ use Doctrine\ORM\EntityManager;
 
 /**
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
 class Config {
@@ -26,7 +26,7 @@ class Config {
 	protected $em;
 
 	/**
-	 * @var SettingRepository
+	 * @var SettingRepository|null
 	 */
 	protected $repo;
 
@@ -36,7 +36,7 @@ class Config {
 	protected $entityName;
 
 	public function __construct(CacheAdapterInterface $cache = null) {
-		$this->setCache($cache !== null ? $cache : new NullAdapter());
+		$this->setCache($cache ?? new NullAdapter());
 	}
 
 	public function setCache(CacheAdapterInterface $cache) {
@@ -69,9 +69,9 @@ class Config {
 			return $this->cache->get($name);
 		}
 
-		$setting = $this->getRepo()->findOneBy(array(
+		$setting = $this->getRepo()->findOneBy([
 			'name' => $name,
-		));
+		]);
 
 		if ($setting === null) {
 			throw $this->createNotFoundException($name);
@@ -88,9 +88,9 @@ class Config {
 	 * @throws \RuntimeException If the setting is not defined.
 	 */
 	public function set($name, $value) {
-		$setting = $this->getRepo()->findOneBy(array(
+		$setting = $this->getRepo()->findOneBy([
 			'name' => $name,
-		));
+		]);
 
 		if ($setting === null) {
 			throw $this->createNotFoundException($name);
@@ -142,7 +142,7 @@ class Config {
 	 * @return array with name => value
 	 */
 	public function getBySection($section) {
-		$settings = $this->getAsNamesAndValues($this->getRepo()->findBy(array('section' => $section)));
+		$settings = $this->getAsNamesAndValues($this->getRepo()->findBy(['section' => $section]));
 
 		$this->cache->setMultiple($settings);
 
@@ -150,11 +150,11 @@ class Config {
 	}
 
 	/**
-	 * @param SettingInterface[] $entities
+	 * @param SettingInterface[] $settings
 	 * @return array with name => value
 	 */
 	protected function getAsNamesAndValues(array $settings) {
-		$result = array();
+		$result = [];
 
 		foreach ($settings as $setting) {
 			$result[$setting->getName()] = $setting->getValue();
@@ -168,7 +168,13 @@ class Config {
 	 */
 	protected function getRepo() {
 		if ($this->repo === null) {
-			$this->repo = $this->em->getRepository($this->entityName);
+			$repo = $this->em->getRepository($this->entityName);
+
+			if (!$repo instanceof SettingRepository) {
+				throw new \RuntimeException(sprintf('Entity repository of type "%s" expected, but got "%s".', SettingRepository::class, get_class($repo)));
+			}
+
+			$this->repo = $repo;
 		}
 
 		return $this->repo;

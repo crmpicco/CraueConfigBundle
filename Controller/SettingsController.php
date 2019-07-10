@@ -3,15 +3,16 @@
 namespace Craue\ConfigBundle\Controller;
 
 use Craue\ConfigBundle\Entity\SettingInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Craue\ConfigBundle\Form\ModifySettingsForm;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @author Christian Raue <christian.raue@gmail.com>
- * @copyright 2011-2017 Christian Raue
+ * @copyright 2011-2019 Christian Raue
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
-class SettingsController extends Controller {
+class SettingsController extends AbstractController {
 
 	public function modifyAction(Request $request) {
 		$em = $this->getDoctrine()->getManager();
@@ -19,12 +20,11 @@ class SettingsController extends Controller {
 		$allStoredSettings = $repo->findAll();
 		$cache = $this->get('craue_config_cache_adapter');
 
-		$formData = array(
+		$formData = [
 			'settings' => $allStoredSettings,
-		);
+		];
 
-		$useFqcn = method_exists('Symfony\Component\Form\AbstractType', 'getBlockPrefix');
-		$form = $this->createForm($useFqcn ? 'Craue\ConfigBundle\Form\ModifySettingsForm' : 'craue_config_modifySettings', $formData);
+		$form = $this->createForm(ModifySettingsForm::class, $formData);
 
 		if ($request->getMethod() === 'POST') {
 			$form->handleRequest($request);
@@ -41,15 +41,15 @@ class SettingsController extends Controller {
 				$em->flush();
 
 				$this->get('session')->getFlashBag()->set('notice',
-						$this->get('translator')->trans('settings_changed', array(), 'CraueConfigBundle'));
+						$this->get('translator')->trans('settings_changed', [], 'CraueConfigBundle'));
 				return $this->redirect($this->generateUrl($this->container->getParameter('craue_config.redirectRouteAfterModify')));
 			}
 		}
 
-		return $this->render('@CraueConfig/Settings/modify.html.twig', array(
+		return $this->render('@CraueConfig/Settings/modify.html.twig', [
 			'form' => $form->createView(),
 			'sections' => $this->getSections($allStoredSettings),
-		));
+		]);
 	}
 
 	/**
@@ -57,11 +57,11 @@ class SettingsController extends Controller {
 	 * @return string[] (may also contain a null value)
 	 */
 	protected function getSections(array $settings) {
-		$sections = array();
+		$sections = [];
 
 		foreach ($settings as $setting) {
 			$section = $setting->getSection();
-			if (!in_array($section, $sections)) {
+			if (!in_array($section, $sections, true)) {
 				$sections[] = $section;
 			}
 		}
